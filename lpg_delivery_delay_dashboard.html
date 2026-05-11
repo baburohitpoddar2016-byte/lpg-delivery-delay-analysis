@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LPG Delivery Delay Analysis — IOCL Marketing Division</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      padding: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── HEADER ─────────────────────────────── */
+    .org-label {
+      font-size: 11px;
+      color: #888;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 4px;
+    }
+    .sub-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .sub-row p { font-size: 13px; color: #666; }
+    .badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #FFF3CD;
+      color: #7D5A00;
+      border: 1px solid #F0C000;
+    }
+
+    /* ── KPI CARDS ──────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px 20px;
+      border: 1px solid #e5e5e5;
+    }
+    .kpi-label {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 6px;
+    }
+    .kpi-note { font-size: 12px; }
+    .text-danger { color: #C0392B; }
+    .text-warning { color: #D68910; }
+    .text-muted { color: #888; }
+
+    /* ── SECTION HEADERS ────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 10px;
+    }
+
+    /* ── CHART CARDS ────────────────────────── */
+    .card {
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .chart-row {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .legend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      margin-top: 10px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #666;
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── TABLE ──────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 11px;
+      color: #888;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: #fafafa;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+    }
+    tr:last-child td { border-bottom: none; }
+    .cause-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── DMAIC ──────────────────────────────── */
+    .dmaic-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .dmaic-cell {
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .dmaic-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .dmaic-body { font-size: 11px; color: #555; line-height: 1.6; }
+
+    /* ── FOOTER ─────────────────────────────── */
+    .footer {
+      font-size: 11px;
+      color: #aaa;
+      text-align: right;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 700px) {
+      .chart-row { grid-template-columns: 1fr; }
+      .dmaic-grid { grid-template-columns: 1fr 1fr; }
+      body { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <p class="org-label">Indian Oil Corporation Limited · Marketing Division · Kolkata District Office</p>
+  <h1>LPG Delivery Delay Analysis — DMAIC Quality Study</h1>
+  <div class="sub-row">
+    <p>270 distributors · Oct 2024 – Mar 2025</p>
+    <span class="badge">White Belt Quality Project</span>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total delay incidents</div>
+      <div class="kpi-value">1,847</div>
+      <div class="kpi-note text-danger">↑ +12% vs previous 6 months</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Average delay duration</div>
+      <div class="kpi-value">4.2 days</div>
+      <div class="kpi-note text-muted">Target: ≤ 2 days</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Distributors affected</div>
+      <div class="kpi-value">187 / 270</div>
+      <div class="kpi-note text-danger">69.3% of total network</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">On-time delivery rate</div>
+      <div class="kpi-value">68.4%</div>
+      <div class="kpi-note text-warning">Target: 95% — gap of 26.6%</div>
+    </div>
+  </div>
+
+  <!-- MONTHLY + PIE ROW -->
+  <div class="chart-row">
+    <div class="card">
+      <div class="section-label">Monthly trend — delay incidents</div>
+      <div style="position:relative;width:100%;height:220px;">
+        <canvas id="monthlyChart"
+          role="img"
+          aria-label="Bar chart of monthly LPG delivery delays from Oct 2024 to Mar 2025">
+          Oct 287, Nov 312, Dec 345, Jan 298, Feb 276, Mar 329.
+        </canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-label">Root cause breakdown</div>
+      <div style="position:relative;width:100%;height:170px;">
+        <canvas id="reasonChart"
+          role="img"
+          aria-label="Doughnut chart of delay root causes. Transport 38%, Demand surge 24%, Bottling plant 19%, Documentation 12%, Weather 7%.">
+          Transport 38%, Demand surge 24%, Bottling plant 19%, Documentation 12%, Weather 7%.
+        </canvas>
+      </div>
+      <div class="legend-grid">
+        <div class="legend-item"><span class="legend-dot" style="background:#E24B4A;"></span>Transport 38%</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#EF9F27;"></span>Demand surge 24%</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#378ADD;"></span>Bottling plant 19%</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>Documentation 12%</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#7F77DD;"></span>Weather 7%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISTRICT BAR -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-label">Delay incidents by district</div>
+    <div style="position:relative;width:100%;height:290px;">
+      <canvas id="districtChart"
+        role="img"
+        aria-label="Horizontal bar chart of delay incidents by district in West Bengal">
+        South 24 Parganas 342, North 24 Parganas 298, Howrah 276, Hooghly 248, Kolkata 231, Nadia 198, Burdwan 167, Midnapore 87.
+      </canvas>
+    </div>
+  </div>
+
+  <!-- DISTRIBUTOR TABLE -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-label">Top 8 distributors — highest delay frequency</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:26%;">Distributor name</th>
+          <th style="width:22%;">District</th>
+          <th style="width:12%;text-align:right;">Incidents</th>
+          <th style="width:14%;text-align:right;">Avg delay</th>
+          <th style="width:26%;">Primary cause</th>
+        </tr>
+      </thead>
+      <tbody id="distTable"></tbody>
+    </table>
+  </div>
+
+  <!-- DMAIC -->
+  <div class="card" style="margin-bottom:8px;">
+    <div class="section-label">DMAIC improvement framework</div>
+    <div class="dmaic-grid">
+      <div class="dmaic-cell" style="background:#EBF5FB;">
+        <div class="dmaic-title" style="color:#1A5276;">D — Define</div>
+        <div class="dmaic-body">Delivery delay &gt; 2 days across 270 LPG distributors in Kolkata DO</div>
+      </div>
+      <div class="dmaic-cell" style="background:#FEF9E7;">
+        <div class="dmaic-title" style="color:#7D6608;">M — Measure</div>
+        <div class="dmaic-body">1,847 incidents in 6 months; 4.2 days avg; 68.4% OTD vs 95% target</div>
+      </div>
+      <div class="dmaic-cell" style="background:#FDEDEC;">
+        <div class="dmaic-title" style="color:#922B21;">A — Analyse</div>
+        <div class="dmaic-body">Transport + demand surge = 62% of all delays. South 24 Pgs is #1 district</div>
+      </div>
+      <div class="dmaic-cell" style="background:#EAFAF1;">
+        <div class="dmaic-title" style="color:#1E8449;">I — Improve</div>
+        <div class="dmaic-body">Route optimization, demand forecasting model, buffer stock policy at depots</div>
+      </div>
+      <div class="dmaic-cell" style="background:#F2F3F4;">
+        <div class="dmaic-title" style="color:#333;">C — Control</div>
+        <div class="dmaic-body">Weekly SDMS tracking dashboard, monthly distributor performance review</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer">Prepared by: R. Poddar, Trade Apprentice (NATS) · IOCL Marketing Division · Data source: SDMS records</p>
+
+  <script>
+    // ── Monthly Chart ────────────────────────────────────────────────────────
+    new Chart(document.getElementById('monthlyChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Oct 2024','Nov 2024','Dec 2024','Jan 2025','Feb 2025','Mar 2025'],
+        datasets: [{
+          label: 'Delay incidents',
+          data: [287, 312, 345, 298, 276, 329],
+          backgroundColor: ['#B5D4F4','#85B7EB','#E24B4A','#85B7EB','#B5D4F4','#378ADD'],
+          borderRadius: 5,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.y + ' incidents' } }
+        },
+        scales: {
+          x: { ticks: { font: { size: 11 }, autoSkip: false, maxRotation: 30 }, grid: { display: false } },
+          y: { ticks: { font: { size: 11 } }, grid: { color: '#f0f0f0' }, suggestedMin: 200 }
+        }
+      }
+    });
+
+    // ── Doughnut Chart ───────────────────────────────────────────────────────
+    new Chart(document.getElementById('reasonChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Transport','Demand surge','Bottling plant','Documentation','Weather'],
+        datasets: [{
+          data: [38, 24, 19, 12, 7],
+          backgroundColor: ['#E24B4A','#EF9F27','#378ADD','#1D9E75','#7F77DD'],
+          borderWidth: 3,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // ── District Bar Chart ───────────────────────────────────────────────────
+    new Chart(document.getElementById('districtChart'), {
+      type: 'bar',
+      data: {
+        labels: ['South 24 Parganas','North 24 Parganas','Howrah','Hooghly','Kolkata','Nadia','Burdwan','Midnapore'],
+        datasets: [{
+          label: 'Incidents',
+          data: [342, 298, 276, 248, 231, 198, 167, 87],
+          backgroundColor: ctx => {
+            const v = ctx.parsed.x;
+            if (v >= 300) return '#E24B4A';
+            if (v >= 200) return '#EF9F27';
+            return '#378ADD';
+          },
+          borderRadius: 4,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.x + ' incidents' } }
+        },
+        scales: {
+          x: { ticks: { font: { size: 11 } }, grid: { color: '#f0f0f0' } },
+          y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+        }
+      }
+    });
+
+    // ── Distributor Table ────────────────────────────────────────────────────
+    const distributors = [
+      ['Shyam Gas Agency',    'South 24 Parganas', 43, '5.8 days', 'Transport',     '#E24B4A'],
+      ['New Bengal LPG',      'Howrah',             39, '4.9 days', 'Demand surge',  '#EF9F27'],
+      ['Kiran Gas Service',   'North 24 Parganas',  37, '6.1 days', 'Transport',     '#E24B4A'],
+      ['Durga Fuel Centre',   'Hooghly',            34, '4.2 days', 'Bottling plant','#378ADD'],
+      ['Mahalaxmi Gas',       'South 24 Parganas',  31, '5.3 days', 'Transport',     '#E24B4A'],
+      ['Riverside Energy',    'Nadia',              28, '3.8 days', 'Documentation', '#1D9E75'],
+      ['Metro Gas Depot',     'Kolkata',            26, '3.1 days', 'Demand surge',  '#EF9F27'],
+      ['Uttam LPG Agency',    'Burdwan',            24, '4.7 days', 'Bottling plant','#378ADD'],
+    ];
+    const tbody = document.getElementById('distTable');
+    distributors.forEach(([name, dist, incidents, delay, cause, color]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${name}</td>
+        <td style="color:#555;">${dist}</td>
+        <td style="text-align:right;font-weight:600;">${incidents}</td>
+        <td style="text-align:right;color:#C0392B;">${delay}</td>
+        <td><span class="cause-badge" style="background:${color}22;color:${color};">${cause}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>
